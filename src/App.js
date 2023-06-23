@@ -25,11 +25,8 @@ function App() {
 
   const baseQuery = {
     method: 'GET',
-    url: 'https://api.newscatcherapi.com/v2/search',
-    params: {lang: 'en', page_size: 14},
-    headers: {
-      'x-api-key': '2swYoe0EnnlP2c-aljN6gkG7K5aNNIE5XeX_nGf_2oU'
-    }
+    url: 'https://gnews.io/api/v4/search',
+    params: {lang: 'en', max: 1, apikey: '8ed1940461455a13a5b73d266c95afc0'}
   }
   const [query, setQuery] = useState(null);
 
@@ -236,9 +233,9 @@ function App() {
         {display: "Zimbabwe", val: "ZW"}
     ],
     sort_by: [
-      {display: 'Relevance', val: 'relevancy'},
-      {display: 'Recent', val: 'date'},
-      {display: 'Source rank', val: 'rank'}
+      {display: 'Relevance', val: 'relevance'},
+      {display: 'Most Recent', val: 'publishedAt'}
+      // {display: 'Source rank', val: 'rank'}
     ]
   }
 
@@ -278,8 +275,8 @@ function App() {
       // tempSearch.params.sort_by = tags.sort_by;
       // tempSearch.params.from = tags.time;
       
+      tempSearch.params.country = [...tags.countries][0].toLowerCase();
       // if (tags.countries.length > 0) {
-      //   tempSearch.params.countries = [...tags.countries];
       // }
       setQuery(tempSearch)
     }       
@@ -288,15 +285,22 @@ function App() {
   // WHEN QUERY UPDATES, MAKE A REQUEST //
   useEffect(() => {
     if (!query) return;
-    let storedArticles = JSON.parse(localStorage.getItem('keepArticles'));
-    setStories(storedArticles);
+    // let storedArticles = JSON.parse(localStorage.getItem('keepArticles'));
+    // setStories(storedArticles);
 
-    console.log(query);
+    console.log(query.params.q);
 
-    axios.request(query).then((res) => {
-      setStories(res.data.articles)
-      // localStorage.setItem('keepArticles', JSON.stringify(res.data.articles))
-    })
+    // axios.request(query).then((res) => {
+    //   setStories(res.data.articles)
+    // })
+
+    let url = `${query.url}?q=${query.params.q.replace(' ', '')}&apikey=${query.params.apikey}`
+    console.log(url);
+    fetch(url).then((res) => {
+      return res.json()}).then((data) => {
+        console.log(data);
+        setStories(data.articles);
+      })
   }, [query])
 
   function search() {
