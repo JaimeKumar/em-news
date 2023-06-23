@@ -300,6 +300,7 @@ function App() {
       return res.json()}).then((data) => {
         console.log(data);
         setStories(data.articles);
+        localStorage.setItem('keepArticles', JSON.stringify(data.articles))
       })
   }, [query])
 
@@ -394,19 +395,13 @@ function App() {
     setTags(temp)
   }
 
-  $(window).scroll(function() {
-    if($(window).scrollTop() + $(window).height() === $(document).height()) {
-        console.log('hey');
-    }
- });
-
   return (
     <div className="App">
       <div id="nav">
         <div id="navCont">
           <div id="menuButton">
             {/* <img src={profile} alt="profile button" /> */}
-            <h4>What's New?</h4>
+            <h4>Egg news</h4>
           </div>
           <div id="searchBar">
             <input id='searchInput' ref={searchInput} type="text" onKeyDown={searchButton} />
