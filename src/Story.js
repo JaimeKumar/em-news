@@ -15,8 +15,6 @@ export default function Story({story}) {
   return (
     <a className='story' href={story.url}>
       <div className="textBlock">
-        <div className="bgBlur"></div>
-
         <h1>{title}</h1>
         <span>{story.source.name} <strong>•</strong> {date}</span>
       </div>

@@ -285,10 +285,10 @@ function App() {
   // WHEN QUERY UPDATES, MAKE A REQUEST //
   useEffect(() => {
     if (!query) return;
-    // let storedArticles = JSON.parse(localStorage.getItem('keepArticles'));
-    // setStories(storedArticles);
+    let storedArticles = JSON.parse(localStorage.getItem('keepArticles'));
+    setStories(storedArticles);
 
-    console.log(query.params.q);
+    console.log(query);
 
     // axios.request(query).then((res) => {
     //   setStories(res.data.articles)
@@ -296,12 +296,12 @@ function App() {
 
     let url = `${query.url}?q=${query.params.q.replace(' ', '')}&apikey=${query.params.apikey}`
     console.log(url);
-    fetch(url).then((res) => {
-      return res.json()}).then((data) => {
-        console.log(data);
-        setStories(data.articles);
-        localStorage.setItem('keepArticles', JSON.stringify(data.articles))
-      })
+    // fetch(url).then((res) => {
+    //   return res.json()}).then((data) => {
+    //     console.log(data);
+    //     setStories(data.articles);
+    //     localStorage.setItem('keepArticles', JSON.stringify(data.articles))
+    //   })
   }, [query])
 
   function search() {

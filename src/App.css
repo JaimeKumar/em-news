@@ -382,15 +382,17 @@ strong {
   display: flex;
   flex-direction: column;
   justify-content: space-around;
+  justify-content: center;
 }
 
 .story h1 {
-  font-size: var(--med);
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
   text-align: left;
   font-family: 'Heebo';
-  max-height: 48px;
+  /* max-height: 60px; */
   overflow: hidden;
   color: black;
+  margin-bottom: 5px;
 }
 
 .story span {
