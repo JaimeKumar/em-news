@@ -8,17 +8,16 @@ import profile from './profile.png'
 import Tag from './Tag';
 import { v4 as uuid } from 'uuid';
 import Dropdown from 'react-dropdown';
-import { logDOM } from '@testing-library/react';
 
 function App() {
 
   const [stories, setStories] = useState([]);
   const [tags, setTags] = useState({
-    countries: [],
+    country: 'Any',
     keywords: [],
-    location: [],
+    query: "",
     time: '7 days ago',
-    sort_by: 'relevancy'
+    sort_by: 'publishedAt'
   })
   const tagInput = useRef();
   const searchInput = useRef();
@@ -37,7 +36,7 @@ function App() {
       {display: 'This week', val: '7 days ago', val2: '7d'},
       {display: 'This month', val: '30 days ago', val2: '30d'}
     ],
-    location: [
+    countries: [
         {display: "Afghanistan", val: "AF"},
         {display: "Albania", val: "AL"},
         {display: "Algeria", val: "DZ"},
@@ -241,22 +240,21 @@ function App() {
 
   const [dropPos, setDropPos] = useState({
     time: 2,
-    location: 0,
-    sort_by: 0
+    countries: 0,
+    sort_by: 1
   })
 
   useEffect(() => {
     $.getJSON('https://ipapi.co/json/', function(data) {
       setTags(p => ({
         ...p,
-        countries: [data.country_code],
-        keywords: [],
-        location: [{val: data.region, id: uuid()}, {val: data.city, id: uuid()}]
+        country: data.country_code,
+        keywords: [{val: data.region, id: uuid()}]
       }))
 
       setDropPos(p => ({
         ...p,
-        location: dropdownOptions['location'].map(loc => loc.val).indexOf(data.country_code)
+        countries: dropdownOptions.countries.map(loc => loc.val).indexOf(data.country_code)
       }))
     });
   }, [])
@@ -265,42 +263,29 @@ function App() {
   useEffect(() => {
     let tempSearch = {...baseQuery};
 
-    if (tags.keywords.length + tags.location.length > 0) {
-      let emptyKW = [];
-      emptyKW = emptyKW.concat(tags.keywords.map(x => x.val));
-      emptyKW = emptyKW.concat(tags.location.map(x => x.val));
-      tempSearch.params.q = [...emptyKW].toString().replace(',', ' ');
-      
-      
-      // tempSearch.params.sort_by = tags.sort_by;
-      // tempSearch.params.from = tags.time;
-      
-      tempSearch.params.country = [...tags.countries][0].toLowerCase();
-      // if (tags.countries.length > 0) {
-      // }
-      setQuery(tempSearch)
+    if (tags.query.length > 0) {
+      tempSearch.params.q = tags.query;
+    } else if (tags.keywords.length > 0) {
+      tempSearch.params.q = [...tags.keywords].map(x => x.val).toString().replaceAll(',', ' OR ');
     }       
+    // tempSearch.params.from = tags.time;
+    tempSearch.params.sortBy = tags.sort_by;
+    tempSearch.params.country = tags.country.toLowerCase();
+    setQuery(tempSearch)
   }, [tags])
 
   // WHEN QUERY UPDATES, MAKE A REQUEST //
   useEffect(() => {
-    if (!query) return;
+    if (!query || !query.params.q) return;
+    // console.log(query);
     // let storedArticles = JSON.parse(localStorage.getItem('keepArticles'));
     // setStories(storedArticles);
 
-    // console.log(query);
-
-    // axios.request(query).then((res) => {
-    //   setStories(res.data.articles)
-    // })
-
     let url = `${query.url}?q=${query.params.q.replace(' ', '')}&apikey=${query.params.apikey}`
-    // console.log(url);
     fetch(url).then((res) => {
       return res.json()}).then((data) => {
-        // console.log(data);
         setStories(data.articles);
-        // localStorage.setItem('keepArticles', JSON.stringify(data.articles))
+        localStorage.setItem('keepArticles', JSON.stringify(data.articles))
       })
   }, [query])
 
@@ -308,8 +293,7 @@ function App() {
     let q = searchInput.current.value;
     searchInput.current.value = '';
     let temp = {...tags};
-    temp.keywords = [{val: q, id: uuid()}];
-    temp.location = [];
+    temp.query = q;
     setTags(temp);
   }
 
@@ -356,16 +340,7 @@ function App() {
         ...p,
         keywords: temp
       }))
-    } else {
-      temp = [...tags.countries]
-      i = temp.indexOf(temp.find(t => t.id===id));
-      if (i < 0) return;
-      temp.splice(i, 1);
-      setTags(p => ({
-        ...p,
-        countries: temp
-      }))
-    }
+    } 
   }
 
   function dropdownChange(e) {
@@ -376,7 +351,7 @@ function App() {
         let temp = {...dropPos};
         temp[key] = n;
         setDropPos(temp)
-        if (key === 'location') {
+        if (key === 'countries') {
           changeCountry(n);
         } else {
           let temp = {...tags}
@@ -390,8 +365,7 @@ function App() {
 
   function changeCountry(n) {
     let temp = {...tags};
-    temp.countries = [dropdownOptions.location[n].val];
-    temp.location = [];
+    temp.country = dropdownOptions.countries[n].val;
     setTags(temp)
   }
 
@@ -401,7 +375,7 @@ function App() {
         <div id="navCont">
           <div id="menuButton">
             {/* <img src={profile} alt="profile button" /> */}
-            <h4>Egg news</h4>
+            <h4>EM NEWS</h4>
           </div>
           <div id="searchBar">
             <input id='searchInput' ref={searchInput} type="text" onKeyDown={searchButton} />
@@ -412,22 +386,20 @@ function App() {
       <div id="storyCont">
         <div id="filters">
           <div id="tags">
-            {tags.location.map(t => {
-              return <Tag key={t.id} tag={t} delTag={deleteTag} />
-            })}
             {tags.keywords.map(t => {
               return <Tag key={t.id} tag={t} delTag={deleteTag}/>
             })}
             <div className='addTag' id="addTag" onClick={openAddTag}>
               <input id='tagInput' ref={tagInput}  className='tagInput' type="text" onKeyDown={addTag} onBlur={closeAddTag} />
-              <p>✛</p>
+              {/* <p>✛</p> */}
+              <p>+</p>
             </div>
           </div>
 
           <div id="tools">
-            <Dropdown options={dropdownOptions['time'].map(x => x.display)} onChange={dropdownChange} value={dropdownOptions['time'][dropPos['time']].display} />
-            <Dropdown options={dropdownOptions['location'].map(x => x.display)} onChange={dropdownChange} value={dropdownOptions['location'][dropPos['location']].display} />
-            <Dropdown options={dropdownOptions['sort_by'].map(x => x.display)} onChange={dropdownChange} value={dropdownOptions['sort_by'][dropPos['sort_by']].display} />
+            <Dropdown options={dropdownOptions.time.map(x => x.display)} onChange={dropdownChange} value={dropdownOptions.time[dropPos.time].display} />
+            <Dropdown options={dropdownOptions.countries.map(x => x.display)} onChange={dropdownChange} value={dropdownOptions.countries[dropPos.countries].display} />
+            <Dropdown options={dropdownOptions.sort_by.map(x => x.display)} onChange={dropdownChange} value={dropdownOptions.sort_by[dropPos.sort_by].display} />
           </div>
 
         </div>

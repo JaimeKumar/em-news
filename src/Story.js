@@ -3,8 +3,8 @@ import React from 'react'
 export default function Story({story}) {
     if (!story) return;
     let title = story.title;
-    if (title.length > 80) {
-        title = title.slice(0, 77) + '...'
+    if (title.length > 74) {
+        title = title.slice(0, 71) + '...'
     }
 
     let months = [ "January", "February", "March", "April", "May", "June", 
